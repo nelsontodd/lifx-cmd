@@ -4,8 +4,67 @@ from __future__ import division, print_function, division, absolute_import
 
 import argparse
 import os
-
+import pylifx.scene as scene
 import pylifx
+
+def scene_return(title):
+    if title == 'blue':
+        return {
+                0:   (0.00, 0.00, 0.10),
+                30:  (0.00, 0.00, 0.20),
+                90:  (0.00, 0.00, 0.30),
+                120: (0.00, 0.00, 0.40),
+                150: (0.00, 0.00, 0.50),
+                210: (0.00, 0.00, 0.60),
+                240: (0.00, 0.00, 0.70),
+                270: (0.00, 0.00, 0.80),
+                300: (0.00, 0.10, 0.20),
+                330: (0.00, 0.20, 0.30),
+                360: (0.00, 0.30, 0.40),
+                390: (0.00, 0.40, 0.50),
+                420: (0.00, 0.50, 0.60),
+                450: (0.00, 0.60, 0.70),
+                480: (0.00, 0.70, 0.80),
+                510: (0.00, 0.80, 0.90),
+                540: (0.00, 0.90, 1.00),
+
+                }
+    if title == 'bright':
+        return {
+                0:   (0.10, 0.10, 0.10),
+                30:  (0.20, 0.20, 0.20),
+                90:  (0.30, 0.30, 0.30),
+                120: (0.40, 0.40, 0.40),
+                150: (1.00, 1.00, 1.00),
+               }
+    if title == 'dim':
+        return {
+                0:   (0.05, 0.03, 0.01),
+                30:  (0.07, 0.05, 0.02),
+               }
+ 
+    if title == 'red':
+        return {
+                0:   (0.10, 0.00, 0.00),
+                30:  (0.20, 0.00, 0.00),
+                90:  (0.30, 0.00, 0.00),
+                120: (0.40, 0.00, 0.00),
+                150: (0.50, 0.00, 0.00),
+                210: (0.60, 0.00, 0.00),
+                240: (0.70, 0.00, 0.00),
+                270: (0.80, 0.00, 0.00),
+                300: (0.90, 0.00, 0.00),
+                330: (1.00, 0.00, 0.00),
+                360: (1.00, 0.00, 0.00),
+                390: (1.00, 0.00, 0.00),
+                420: (1.00, 0.10, 0.00),
+                450: (1.00, 0.20, 0.00),
+                480: (1.00, 0.30, 0.00),
+                510: (1.00, 0.40, 0.00),
+                540: (1.00, 0.50, 0.00),
+
+                }
+
 
 
 def power(bulb, state):
@@ -14,8 +73,10 @@ def power(bulb, state):
     elif state == 'off':
         bulb.off()
     else:
-        raise ValueError('Invalid State specified %s' % state)
-
+        try:
+            bulb.on()
+        except:
+            bulb.off()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -23,7 +84,7 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(dest='command')
 
     power_parser = subparsers.add_parser('power', help='Set the bulb power to on or off')
-    power_parser.add_argument('state', choices=('on', 'off'))
+    power_parser.add_argument('state', choices=('on', 'off','toggle'))
 
     rgb_parser = subparsers.add_parser('rgb', help='Set the Red/Green/Blue tint')
     rgb_parser.add_argument('red', type=float)
@@ -39,9 +100,14 @@ if __name__ == '__main__':
     temp_parser.add_argument('kelvin', type=int, help='Temperature value between 0 and 65535')
 
     parser.add_argument('--bulb', '-b', dest='bulb_addr', help='Specify a specific bulb you want to alter')
-    parser.add_argument('--fade-time', '-f', type=int, default=1, help='Specify a transition time')
+    parser.add_argument('--fade-time', '-f', type=int, default=.5, help='Specify a transition time')
     parser.add_argument('--interface', '-i', dest='interface', help='Specify the network interface to use')
 
+    rgb_parser = subparsers.add_parser('sunrise', help='Make the bulb imitate a sunrise')
+    rgb_parser = subparsers.add_parser('blue', help='Fade in blue')
+    rgb_parser = subparsers.add_parser('red', help='Fade in red')
+    rgb_parser = subparsers.add_parser('dim', help='Turn on and make it dim')
+    rgb_parser = subparsers.add_parser('bright', help='Turn on and make it bright')
     args = parser.parse_args()
 
     if args.bulb_addr is None:
@@ -63,3 +129,18 @@ if __name__ == '__main__':
             bulb.set_hsb(args.hue, args.saturation, args.brightness, args.fade_time)
         elif args.command == 'temperature':
             bulb.set_temperature(args.kelvin, args.fade_time)
+        elif args.command == 'sunrise':
+            bulb.on()
+            bulb.run_scene(scene.SUNRISE)
+        elif args.command == 'blue':
+            bulb.on()
+            bulb.run_scene(scene_return('blue'))
+        elif args.command == 'red':
+            bulb.on()
+            bulb.run_scene(scene_return('red'))
+        elif args.command == 'dim':
+            bulb.on()
+            bulb.run_scene(scene_return('dim'))
+        elif args.command == 'bright':
+            bulb.on()
+            bulb.run_scene(scene_return('bright'))
